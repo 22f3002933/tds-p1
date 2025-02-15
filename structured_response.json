@@ -1,0 +1,23 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "task_response",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "The language of the code block",
+          "enum": ["bash", "python"]
+        },
+        "code": {
+          "type": "string",
+          "description": "The code block to execute in the specified language with no comments"
+        }
+      },
+      "required": ["language", "code"],
+      "additionalProperties": false
+    }
+  }
+}
