@@ -54,7 +54,11 @@ async def execute_code(code_response):
             "code": code_response["code"]
         }
 
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as e: 
+        if code_response["language"] == "python":
+            # Retry with python3
+            return await execute_python_code_via_python3(temp_file, code_response["code"])
+        
         return {
             "status": "error",
             "error": f"Execution failed: {e.stderr}",
@@ -65,6 +69,35 @@ async def execute_code(code_response):
             "status": "error",
             "error": str(e),
             "code": code_response["code"]
+        }
+
+
+async def execute_python_code_via_python3(temp_file, code):
+    try:        
+        print(f"Executing Python code with python3 again in file {temp_file}")
+
+        # Execute Python code
+        result = subprocess.run(
+            ["python3", f"{temp_file}"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+
+        # Clean up
+        os.remove(temp_file)
+        
+        return {
+            "status": "success",
+            "error": result.stderr,
+            "output": result.stdout,
+            "code": code
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "code": code
         }
 
 async def get_llm_response(prompt):  
@@ -148,13 +181,13 @@ async def run_task(task: str = Query(..., description="Plain-English task descri
             output = retry_response["content"]
             print(output)
             result = await execute_code(json.loads(output))
-        elif "error" in result['output'].lower():
+        elif "error" in result['output'].lower() or "err" in result['error'].lower():
             print("Task failed, retrying")
             retry_response = await retry_with_error(task, result["output"])
             output = retry_response["content"]
             result = await execute_code(json.loads(output))
  
-        if result["status"] == "error" or  "error" in result['output'].lower():
+        if result["status"] == "error" or  "error" in result['output'].lower() or  "err" in result['error'].lower():
             print("Task failed after retry")
             return HTTPException(status_code=500, detail=f"Task failed: {result['error']}")
 

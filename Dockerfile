@@ -30,7 +30,8 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get remove -y libnode-dev nodejs && \
     curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - && \
     apt-get update && apt-get install -y nodejs && \
-    node -v && npm install -g prettier@3.4.2
+    node -v && npm install -g prettier@3.4.2 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create and set the working directory
 WORKDIR /app
